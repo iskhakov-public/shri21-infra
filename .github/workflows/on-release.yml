@@ -27,4 +27,6 @@ jobs:
 
       - run: "npm run build"
 
-      - run: "echo"
+      - run: "./scripts/generate_changelog.sh |& ./scripts/create_ticket.sh"
+
+      - run: "CI=true npm test |& ./scripts/create_comment.sh"
