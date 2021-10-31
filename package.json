@@ -1,6 +1,6 @@
 {
   "name": "shri21-infra",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Infra example",
   "main": "src/index.html",
   "scripts": {
