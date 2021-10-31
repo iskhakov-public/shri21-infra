@@ -4,7 +4,7 @@
   "description": "Infra example",
   "main": "src/index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "config": {
     "commitizen": {
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@commitlint/cli": "^13.2.1",
     "cz-customizable": "^6.3.0",
-    "husky": "^7.0.4"
+    "husky": "^7.0.4",
+    "jest": "^27.3.1"
   }
 }

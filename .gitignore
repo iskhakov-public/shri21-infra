@@ -1,3 +1,4 @@
 node_modules/
 .env
 res.log
+test.sh
