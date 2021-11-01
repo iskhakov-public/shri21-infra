@@ -71,7 +71,7 @@ def yt_create_ticket(description):
     key = respObj["key"]
     # print(key)
     
-    print("{} {}".format(resp.status_code, key))
+    return (resp.status_code, key)
 
 
 
@@ -83,13 +83,13 @@ def yt_create_comment(text, issueid):
         "text": text
     }
 
-    print(data)
+    # print(data)
     try:
         resp = requests.post(url, headers=headers, data=json.dumps(data))
         # print(resp.json())
         resp.raise_for_status()
     except HTTPError as e:
-        print("> create-comment: HTTPError - {}".format(e.strerror))
+        print("> create-comment: HTTPError - {} \n>\t{}".format(e, resp.content))
         sys.exit(1)
 
     return resp.status_code
@@ -133,7 +133,7 @@ def create_comment(args):
         print("> create-comment: IOError - {} -> {}".format(issueFile, e.strerror), file=sys.stderr)
         sys.exit(1)
     
-    yt_create_comment(text, issue)
+    print(" ".join(yt_create_comment(text, issue)))
 
 @subcommand([argument("-d", "--description", help="Description to create ticket with")])
 def create_ticket(args):
@@ -141,7 +141,7 @@ def create_ticket(args):
 
     try:
         with open(descFile, encoding="utf-8") as f:
-            yt_create_ticket(f.read())
+            print(yt_create_ticket(f.read()))
 
     except IOError as e:
         print("> create-ticket: IOError - {}".format(e.strerror), file=sys.stderr)
