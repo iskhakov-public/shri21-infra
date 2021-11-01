@@ -71,7 +71,7 @@ def yt_create_ticket(description):
     key = respObj["key"]
     # print(key)
     
-    return (resp.status_code, key)
+    return key
 
 
 
@@ -128,12 +128,12 @@ def create_comment(args):
 
     try:
         with open(issueFile, encoding="utf-8") as f:
-            issue = f.read()
+            issue = f.read().strip()
     except IOError as e:
         print("> create-comment: IOError - {} -> {}".format(issueFile, e.strerror), file=sys.stderr)
         sys.exit(1)
     
-    print(" ".join(yt_create_comment(text, issue)))
+    print(yt_create_comment(text, issue))
 
 @subcommand([argument("-d", "--description", help="Description to create ticket with")])
 def create_ticket(args):

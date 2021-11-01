@@ -39,7 +39,7 @@ jobs:
         run: "cat ./logs/changelog.txt"
 
       - name: Push Changelog to Yandex.Tracker
-        run: "python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt | awk '{print $2}' > ./logs/issueid.log"
+        run: "python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt > ./logs/issueid.log"
         env:
           YANDEX_OAUTH: ${{ secrets.OAUTH}}
           YANDEX_ORGID: ${{ secrets.ORGID}}
