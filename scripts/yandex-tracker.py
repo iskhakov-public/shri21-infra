@@ -2,6 +2,7 @@ import requests
 import os
 import sys
 import json
+from datetime import datetime
 from requests.models import HTTPError
 from requests.structures import CaseInsensitiveDict
 import subprocess
@@ -46,6 +47,48 @@ headers["OrgId"] = os.environ.get("YANDEX_ORGID")
 #--------------------------------------------------------------------------------
 #------------------------------API Requests--------------------------------------
 
+def yt_find_task():
+    url = "https://api.tracker.yandex.net/v2/issues/_search"
+
+    data  = {
+        "filter": {
+            "queue": "TMP",
+            "summary": f'todoapp deploy {tagVer}'
+        }
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, data=json.dumps(data))
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, list) and len(data) != 0:
+            print("Found tickets: ")
+            for entry in data:
+                print(f'* {entry["key"]} {entry["summary"]}')
+            
+            key = data[0]["key"]
+
+            histList = []
+            for line in data[0]["description"].split("\n"):
+                if line.strip().startswith("%hist:"):
+                    histList.append(line.strip())
+
+            # print(histList)
+            print(f'Using ticket: {key}')
+            
+            return {
+                "key": key,
+                "hist": histList
+            }
+        
+        else:
+            return None
+        # if len(data) != 0:
+
+    except HTTPError as e:
+        print("> create-ticket: HTTPError - {}".format(e.strerror))
+        sys.exit(1)
+
 def yt_create_ticket(description):
     url = "https://api.tracker.yandex.net/v2/issues/"
 
@@ -58,8 +101,23 @@ def yt_create_ticket(description):
 
     # print(json.dumps(data))
 
+    ticket = yt_find_task()
+    method = ""
+    if ticket == None:
+        print("No previous tickets for tag found, creating new one")
+        method = "POST"
+        data["description"] += f'\n\n%hist: Created on {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+    else:
+        url = f'{url}{ticket["key"]}'
+        method = "PATCH"
+        hist = ticket["hist"]
+        hist.append(f'%hist: Updated on {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}')
+        data["description"] += f'\n\n'
+        for histEntry in hist:
+            data["description"] += f'\n{histEntry}'
+
     try:
-        resp = requests.post(url, headers=headers, data=json.dumps(data))
+        resp = requests.request(method, url, headers=headers, data=json.dumps(data))
         resp.raise_for_status()
     except HTTPError as e:
         print("> create-ticket: HTTPError - {}".format(e.strerror))
@@ -110,21 +168,25 @@ def subcommand(args=[], parent=subparsers):
 def argument(*name_or_flags, **kwargs):
     return ([*name_or_flags], kwargs)
 
-@subcommand([argument("-t", "--text", help="Text to create ticket with"), argument("-i", "--issue", help="Key or ID of the ticket")])
+@subcommand([argument("-t", "--text", help="Text to create ticket with"), argument("-i", "--issue", help="Key or ID of the ticket"), argument("-m", "--message", help="Provide text as parameter (not as path to file)")])
 def create_comment(args):
     textFile = args.text
     issueFile = args.issue
+    message = args.message
 
     text = ""
     issue = ""
 
-    try:
-        with open(textFile, encoding="utf-8") as f:
-            text = f.read()
+    if message is None:
+        try:
+            with open(textFile, encoding="utf-8") as f:
+                text = f.read()
 
-    except IOError as e:
-        print("> create-comment: IOError - {} -> {}".format(textFile, e.strerror), file=sys.stderr)
-        sys.exit(1)
+        except IOError as e:
+            print("> create-comment: IOError - {} -> {}".format(textFile, e.strerror), file=sys.stderr)
+            sys.exit(1)
+    else:
+        text=message
 
     try:
         with open(issueFile, encoding="utf-8") as f:
@@ -132,7 +194,7 @@ def create_comment(args):
     except IOError as e:
         print("> create-comment: IOError - {} -> {}".format(issueFile, e.strerror), file=sys.stderr)
         sys.exit(1)
-    
+    # print(text)
     print(yt_create_comment(text, issue))
 
 @subcommand([argument("-d", "--description", help="Description to create ticket with")])
@@ -150,6 +212,8 @@ def create_ticket(args):
 
 # python scripts/yandex-tracker.py create_comment -t ./logs/tests.log -i ./logs/issueid.log
 # python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt
+
+# yt_find_task()
 
 if __name__ == "__main__":
     args = cli.parse_args()
