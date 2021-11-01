@@ -1,6 +1,6 @@
 {
   "name": "shri21-infra",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Infra example",
   "private": true,
   "dependencies": {
