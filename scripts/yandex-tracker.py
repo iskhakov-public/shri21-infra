@@ -2,11 +2,15 @@ import requests
 import os
 import sys
 import json
+import logging
 from datetime import datetime
 from requests.models import HTTPError
 from requests.structures import CaseInsensitiveDict
 import subprocess
 from argparse import ArgumentParser
+
+
+logging.basicConfig(filename='./logs/yandex-tracker.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 #--------------------------------------------------------------------------------
 #------------------------------GIT Invoke Helpers--------------------------------
@@ -62,9 +66,9 @@ def yt_find_task():
         resp.raise_for_status()
         data = resp.json()
         if isinstance(data, list) and len(data) != 0:
-            print("Found tickets: ")
+            logging.info("Found tickets: ")
             for entry in data:
-                print(f'* {entry["key"]} {entry["summary"]}')
+                logging.info(f'* {entry["key"]} {entry["summary"]}')
             
             key = data[0]["key"]
 
@@ -74,7 +78,7 @@ def yt_find_task():
                     histList.append(line.strip())
 
             # print(histList)
-            print(f'Using ticket: {key}')
+            logging.info(f'Using ticket: {key}')
             
             return {
                 "key": key,
@@ -104,7 +108,7 @@ def yt_create_ticket(description):
     ticket = yt_find_task()
     method = ""
     if ticket == None:
-        print("No previous tickets for tag found, creating new one")
+        logging.info("No previous tickets for tag found, creating new one")
         method = "POST"
         data["description"] += f'\n\n%hist: Created on {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
     else:

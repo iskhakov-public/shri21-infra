@@ -82,7 +82,7 @@ jobs:
           echo $GIT_TAG
           docker tag $IMAGE_NAME $IMAGE_ID:$GIT_TAG
           docker push $IMAGE_ID:$GIT_TAG
-          echo "$IMAGE_ID:$GIT_TAG" > ./logs/docker.log
+          echo "Docker image was pushed, accessible at $IMAGE_ID:$GIT_TAG" > ./logs/docker.log
 
       - name: Push docker info to Yandex.Tracker
         run: "python scripts/yandex-tracker.py create_comment -i ./logs/issueid.log -t ./logs/docker.log"
