@@ -8,18 +8,20 @@ COMMITAUTHOR=$(git rev-list -n 1 ${CURRENT_TAG} --pretty=format:'%an %ae' | awk 
 
 VERSION="${CURRENT_TAG}-${HOTFIXES}-${LASTHASHCOMMIT}"
 SUMMARY="test-release: todo-app deploy ${VERSION}"
-DESCRIPTION=$(</dev/stdin)
+DESCRIPTION=$(cat)
+# DESCRIPTION="Hello World"
 DATE=$(TZ='Europe/Moscow' date "+%F-%H-%M-%S MSK")
 ASSIGNEE="iskhakov-nu"
 GENERATED="
-
 Date: ${DATE}
 By ${COMMITAUTHOR}"
 
 POST="/v2/issues/"
-BODY="{\"summary\":\"${SUMMARY}\",\"queue\":\"${QUEUE}\",\"description\":\"${DESCRIPTION} ${GENERATED}\",\"assignee\":\"${ASSIGNEE}\"}"
-echo "$BODY"
+BODY="{\"summary\":\"${SUMMARY}\",\"queue\":\"${QUEUE}\",\"description\":\"${DESCRIPTION}\",\"assignee\":\"${ASSIGNEE}\"}"
+# BODY=$(printf '%q' "$BODY")
+# echo "$BODY" | jq "."
 DATA=$(curl ${GLOBAL_CURL_OPTIONS} -H "${AUTH_HEADER}" -H "${X_ORG_HEADER}" -H "${CONTENT_TYPE_HEADER}" -X POST -d "${BODY}" "${HOST}${POST}")
+echo $DATA
 echo $DATA | jq ".self"
 echo $DATA | jq ".key" > res.log 
 

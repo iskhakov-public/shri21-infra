@@ -25,15 +25,25 @@ jobs:
       - name: Run Build
         run: "npm run build"
 
-      - name: Create Changelog and create release-ticket in Yandex.Tracker
-        run: "./scripts/generate_changelog.sh |& ./scripts/create_ticket.sh"
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Install Python dependencies
+        run: "python -m pip install requests"
+
+      - name: Create Changelog
+        run: "sh ./scripts/generate_changelog.sh > ./logs/changelog.txt "
+
+      - name: Push Changelog to Yandex.Tracker
+        run: "python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt | awk '{print $2}' > ./logs/issueid.log"
         env:
           YANDEX_OAUTH: ${{ secrets.OAUTH}}
           YANDEX_ORGID: ${{ secrets.ORGID}}
           YANDEX_QUEUE: TMP
 
-      - name: Run tests and create comment in release-ticket
-        run: "CI=true npm test |& ./scripts/create_comment.sh"
+      - name: Run tests
+        run: "CI=true npm test &> ./logs/tests.log"
         env:
           YANDEX_OAUTH: ${{ secrets.OAUTH}}
           YANDEX_ORGID: ${{ secrets.ORGID}}

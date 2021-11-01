@@ -1,5 +1,7 @@
 .env
-res.log
+/logs/**
+!/logs/.gitkeep
+test.py
 test.sh
 # dependencies
 /node_modules
