@@ -17,6 +17,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Install Python dependencies
+        run: "python -m pip install requests"
+
+      - name: Create Changelog
+        run: "sh ./scripts/generate_changelog.sh > ./logs/changelog.txt && cat ./logs/changelog.txt"
+
+      - name: Push Changelog to Yandex.Tracker
+        run: |
+          python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt > ./logs/issueid.log
+          python scripts/yandex-tracker.py create_comment -m "Build started" -i ./logs/issueid.log
+        env:
+          YANDEX_OAUTH: ${{ secrets.OAUTH}}
+          YANDEX_ORGID: ${{ secrets.ORGID}}
+          YANDEX_QUEUE: TMP
+
       - uses: actions/setup-node@v2
         with:
           node-version: "15"
@@ -28,34 +47,8 @@ jobs:
       - name: Run Build
         run: "npm run build"
 
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-
-      - name: Install Python dependencies
-        run: "python -m pip install requests"
-
-      - name: Create Changelog
-        run: "sh ./scripts/generate_changelog.sh > ./logs/changelog.txt "
-
-      - name: "DBG Cat Logs"
-        run: "cat ./logs/changelog.txt"
-
-      - name: Push Changelog to Yandex.Tracker
-        run: "python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt > ./logs/issueid.log"
-        env:
-          YANDEX_OAUTH: ${{ secrets.OAUTH}}
-          YANDEX_ORGID: ${{ secrets.ORGID}}
-          YANDEX_QUEUE: TMP
-
-      - name: "DBG Cat Issue"
-        run: "cat ./logs/issueid.log"
-
       - name: Run tests
-        run: "CI=true npm test &> ./logs/tests.log"
-
-      - name: "DBG Cat Tests"
-        run: "cat ./logs/tests.log"
+        run: "CI=true npm test &> ./logs/tests.log && cat ./logs/tests.log"
 
       - name: Push Tests to Yandex.Tracker
         run: "python scripts/yandex-tracker.py create_comment -t ./logs/tests.log -i ./logs/issueid.log"
@@ -71,22 +64,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker Image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
-
-      - name: Push Docker Image
+      - name: Build and Push Docker Image
         run: |
+          docker build . --file Dockerfile --tag $IMAGE_NAME
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           GIT_TAG=$(git tag -l | tail -1)
           echo $GIT_TAG
           docker tag $IMAGE_NAME $IMAGE_ID:$GIT_TAG
           docker push $IMAGE_ID:$GIT_TAG
-          echo "Docker image was pushed, accessible at $IMAGE_ID:$GIT_TAG" > ./logs/docker.log
-
-      - name: Push docker info to Yandex.Tracker
-        run: "python scripts/yandex-tracker.py create_comment -i ./logs/issueid.log -t ./logs/docker.log"
+          python scripts/yandex-tracker.py create_comment -i ./logs/issueid.log -m "Docker image was pushed, use 'docker pull $IMAGE_ID:$GIT_TAG'
+          Build Finished"
         env:
           YANDEX_OAUTH: ${{ secrets.OAUTH}}
           YANDEX_ORGID: ${{ secrets.ORGID}}
           YANDEX_QUEUE: TMP
+
+      - name: YT Connector Logs
+        run: "ls ./logs"

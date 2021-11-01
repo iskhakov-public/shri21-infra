@@ -1,5 +1,5 @@
 import requests
-import os
+import os, time
 import sys
 import json
 import logging
@@ -9,6 +9,8 @@ from requests.structures import CaseInsensitiveDict
 import subprocess
 from argparse import ArgumentParser
 
+os.environ['TZ'] = 'Europe/Moscow'
+time.tzset()
 
 logging.basicConfig(filename='./logs/yandex-tracker.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
@@ -110,12 +112,12 @@ def yt_create_ticket(description):
     if ticket == None:
         logging.info("No previous tickets for tag found, creating new one")
         method = "POST"
-        data["description"] += f'\n\n%hist: Created on {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+        data["description"] += f'\n\n%hist: Created on {datetime.now().strftime("%d/%m/%Y %H:%M:%S MSK")}'
     else:
         url = f'{url}{ticket["key"]}'
         method = "PATCH"
         hist = ticket["hist"]
-        hist.append(f'%hist: Updated on {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}')
+        hist.append(f'%hist: Updated on {datetime.now().strftime("%d/%m/%Y %H:%M:%S MSK")}')
         data["description"] += f'\n\n'
         for histEntry in hist:
             data["description"] += f'\n{histEntry}'
