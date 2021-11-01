@@ -9,9 +9,6 @@ on:
 jobs:
   github_tagged_release:
     runs-on: "ubuntu-20.04"
-    env:
-      AUTHOR: "NAIL ISKHAKOV"
-      OAUTH_TRACKER: ${{ secrets.OAUTH_YANDEX_TRACKER }}
 
     steps:
       - uses: "action/checkout@v2"
@@ -23,10 +20,22 @@ jobs:
           node-version: "15"
           cache: "npm"
 
-      - run: "npm ci"
+      - name: Install dependencies
+        run: "npm ci"
 
-      - run: "npm run build"
+      - name: Run Build
+        run: "npm run build"
 
-      - run: "./scripts/generate_changelog.sh |& ./scripts/create_ticket.sh"
+      - name: Create Changelog and create release-ticket in Yandex.Tracker
+        run: "./scripts/generate_changelog.sh |& ./scripts/create_ticket.sh"
+        env:
+          YANDEX_OAUTH: ${{ secrets.OAUTH}}
+          YANDEX_ORGID: ${{ secrets.ORGID}}
+          YANDEX_QUEUE: TMP
 
-      - run: "CI=true npm test |& ./scripts/create_comment.sh"
+      - name: Run tests and create comment in release-ticket
+        run: "CI=true npm test |& ./scripts/create_comment.sh"
+        env:
+          YANDEX_OAUTH: ${{ secrets.OAUTH}}
+          YANDEX_ORGID: ${{ secrets.ORGID}}
+          YANDEX_QUEUE: TMP
