@@ -35,6 +35,9 @@ jobs:
       - name: Create Changelog
         run: "sh ./scripts/generate_changelog.sh > ./logs/changelog.txt "
 
+      - name: "DBG Cat Logs"
+        run: "cat ./logs/changelog.txt"
+
       - name: Push Changelog to Yandex.Tracker
         run: "python scripts/yandex-tracker.py create_ticket -d ./logs/changelog.txt | awk '{print $2}' > ./logs/issueid.log"
         env:
@@ -42,8 +45,17 @@ jobs:
           YANDEX_ORGID: ${{ secrets.ORGID}}
           YANDEX_QUEUE: TMP
 
+      - name: "DBG Cat Issue"
+        run: "cat ./logs/issueid.log"
+
       - name: Run tests
         run: "CI=true npm test &> ./logs/tests.log"
+
+      - name: "DBG Cat Tests"
+        run: "cat ./logs/tests.log"
+
+      - name: Push Tests to Yandex.Tracker
+        run: "python scripts/yandex-tracker.py create_comment -t ./logs/tests.log -i ./logs/issueid.log"
         env:
           YANDEX_OAUTH: ${{ secrets.OAUTH}}
           YANDEX_ORGID: ${{ secrets.ORGID}}
