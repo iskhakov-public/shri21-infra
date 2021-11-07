@@ -11,7 +11,7 @@ test("e2e tests", () => {
 });
 
 test("laws of physics", () => {
-  expect(true).toBe(true);
+  expect(true).toBe(false);
 });
 
 test("1 + 1 = 2?", () => {
